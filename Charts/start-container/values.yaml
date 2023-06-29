@@ -4,4 +4,7 @@ job:
   image: daocloud.io/daocloud/kubectl
 sts:
   resources: {}
-  mountPath: {}
+  volumeMounts: []
+ports:
+  ssh: 22
+  http: 80

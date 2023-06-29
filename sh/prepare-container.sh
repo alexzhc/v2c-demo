@@ -1,12 +1,22 @@
 #!/bin/bash -x
 
 vm_name=$1
-config=/vm/$2
+config=./vm/$2
 disk_format=$3
 
-# Do something such as: disable firewalld and selinux, etc.
-echo "Make sure ROOT files is ready"
-ls -lh /vol
+# This step will process root files: extract important information and make necessary changes
+
+# Get ssh and http port, by best effort
+ls -lh ./vol
+http_port=$(cat ./vol/etc/httpd/conf/httpd.conf | awk '/^Listen/ {print $2}')
+ssh_port=$(cat ./vol/etc/ssh/sshd_config | awk '/^Port/ {print $2}')
+[ -z "$http_port" ] && http_port=80
+[ -z "$ssh_port" ] && ssh_port=22
+
+# Disable selinux and firewalld
+sed -i 's/^SELINUX=.*/SELINUX=disabled/' ./vol/etc/selinux/config
+rm -vf ./vol/etc/systemd/system/dbus-org.fedoraproject.FirewallD1.service
+rm -vf ./vol/etc/systemd/system/multi-user.target.wants/firewalld.service
 
 # Get VM CPU and Memory configuration
 if [ ! -f "$config" ]; then
@@ -28,7 +38,44 @@ sts:
     limits:
       cpu: "${cpu}"
       memory: "${mem}Mi"
+  ports:
+    ssh: ${ssh_port}
+    http: ${http_port}
+  volumeMounts:
 EOF
+
+for i in $(ls -1 ./vol); do
+  case "$i" in
+    sys)
+      continue
+    ;;
+    proc)
+      continue
+    ;;
+    dev)
+      continue
+    ;;
+    run)
+      continue
+    ;;
+    boot)
+      continue
+    ;;
+    mnt)
+      continue
+    ;;
+    media)
+      continue
+    ;;
+    *)
+cat >> values.yaml << EOF
+  - name: root
+    mountPath: /$i
+    subPath: $i
+EOF
+    ;;
+    esac
+done
 
 cat values.yaml
 

@@ -27,9 +27,9 @@ spec:
         command:
           - /sbin/init
         ports:
-        - containerPort: 22
+        - containerPort: {{ .Values.ports.ssh }}
           name: ssh
-        - containerPort: 80
+        - containerPort: {{ .Values.ports.http }}
           name: http
         readinessProbe:
           # tcpSocket:
@@ -47,54 +47,7 @@ spec:
           readOnly: true
         - name: run
           mountPath: /run
-        - name: root
-          mountPath: /Users
-          subPath: Users
-        - name: root
-          mountPath: /bin
-          subPath: bin
-        - name: root
-          mountPath: /etc
-          subPath: etc
-        - name: root
-          mountPath: /home
-          subPath: home
-        - name: root
-          mountPath: /lib
-          subPath: lib
-        - name: root
-          mountPath: /lib64
-          subPath: lib64
-        - name: root
-          mountPath: /opt
-          subPath: opt
-        - name: root
-          mountPath: /root
-          subPath: root
-        - name: root
-          mountPath: /sbin
-          subPath: sbin
-        - name: root
-          mountPath: /srv
-          subPath: srv
-        - name: root
-          mountPath: /usr
-          subPath: usr
-        - name: root
-          mountPath: /var
-          subPath: var
-        - name: root
-          mountPath: /tmp
-          subPath: tmp
-        # - name: root
-        #   mountPath: /lost+found
-        #   subPath: lost+found
-        # - name: root
-        #   mountPath: /media
-        #   subPath: media
-        # - name: root
-        #   mountPath: /mnt
-        #   subPath: mnt
+        {{- toYaml .Values.sts.volumeMounts | nindent 8 }}
       volumes:
       - name: cgroup
         hostPath:
@@ -117,7 +70,7 @@ spec:
   selector:
     app: {{ .Values.vm.name }}
   ports:
-  - port: 22
+  - port: {{ .Values.ports.ssh }}
     name: ssh
-  - port: 80
+  - port: {{ .Values.ports.http }}
     name: http
