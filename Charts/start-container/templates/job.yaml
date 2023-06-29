@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: start-container-{{ .Values.vm.name }}
+  name: {{ .Release.Name }}
 spec:
   backoffLimit: 0
   parallelism: 1
@@ -11,7 +11,7 @@ spec:
       terminationGracePeriodSeconds: 0
       restartPolicy: Never
       containers:
-      - name: prepare
+      - name: start
         image: {{ .Values.job.image }}
         imagePullPolicy: IfNotPresent
         workingDir: /

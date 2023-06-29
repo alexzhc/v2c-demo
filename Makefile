@@ -40,55 +40,55 @@ prep:
 		--from-literal=vcsa_password='$(VCSA_PASSWORD)'
 
 run1:
-	helm install get-vm-files-$(VM) ./Charts/get-vm-files/ \
+	helm install 1-get-vm-files-$(VM) ./Charts/get-vm-files/ \
 		--set vm.name=$(VM) \
 		--set job.image=$(GET_VM_FILES_IMAGE) \
 		--set pvc.storageClass=$(TMP_SC)
-	kubectl wait --for=condition=complete --timeout=1200s job/get-vm-files-$(VM)
+	kubectl wait --for=condition=complete --timeout=1200s job/1-get-vm-files-$(VM)
 unrun1:
-	helm uninstall get-vm-files-$(VM)
+	helm uninstall 1-get-vm-files-$(VM)
 urun1: unrun1
 log1:
-	kubectl logs -f job/get-vm-files-$(VM)
+	kubectl logs -f job/1-get-vm-files-$(VM)
 
 run2:
-	helm install load-root-volume-$(VM) ./Charts/load-root-volume/ \
+	helm install 2-load-root-volume-$(VM) ./Charts/load-root-volume/ \
 		--set vm.name=$(VM) \
 		--set vm.disk=$(VM_DISK) \
 		--set vm.diskFormat=$(VM_DISK_FORMAT) \
 		--set pvc.storageClass=$(ROOT_SC)
-	kubectl wait --for=condition=complete --timeout=1200s job/load-root-volume-$(VM)
+	kubectl wait --for=condition=complete --timeout=1200s job/2-load-root-volume-$(VM)
 unrun2:
-	helm uninstall load-root-volume-$(VM)
+	helm uninstall 2-load-root-volume-$(VM)
 urun2: unrun2
 log2:
-	kubectl logs -f job/load-root-volume-$(VM)
+	kubectl logs -f job/2-load-root-volume-$(VM)
 
 run3:
-	helm install prepare-container-$(VM) ./Charts/prepare-container/ \
+	helm install 3-prepare-container-$(VM) ./Charts/prepare-container/ \
 		--set vm.name=$(VM) \
 		--set vm.config=$(VM_CONF) \
 		--set vm.diskFormat=$(VM_DISK_FORMAT)
-	kubectl wait --for=condition=complete --timeout=1200s job/prepare-container-$(VM)
+	kubectl wait --for=condition=complete --timeout=1200s job/3-prepare-container-$(VM)
 unrun3:
-	helm uninstall prepare-container-$(VM)
+	helm uninstall 3-prepare-container-$(VM)
 urun3: unrun3
 log3:
-	kubectl logs -f job/prepare-container-$(VM)
+	kubectl logs -f job/3-prepare-container-$(VM)
 
 run4:
 	kubectl get cm v2c-$(VM)-conf -o yaml | yq '.data["values.yaml"]' > /tmp/values.yaml
-	helm install start-container-$(VM) ./Charts/start-container/ \
+	helm install 4-start-container-$(VM) ./Charts/start-container/ \
 		--set vm.name=$(VM) \
 		-f /tmp/values.yaml
 	watch kubectl get po
 unrun4:
-	helm uninstall start-container-$(VM)
+	helm uninstall 4-start-container-$(VM)
 urun4: unrun4
 log4:
-	kubectl logs -f job/start-container-$(VM)
+	kubectl logs -f job/4-start-container-$(VM)
 
-all: run1 run2 run3 run4
+all: prep run1 run2 run3 run4
 unall: unrun4 unrun3 unrun2 unrun1
 	kubectl delete cm v2c-$(VM) v2c-$(VM)-conf
 	kubectl delete secret v2c-$(VM)

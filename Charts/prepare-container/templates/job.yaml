@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: prepare-container-{{ .Values.vm.name }}
+  name: {{ .Release.Name }}
 spec:
   backoffLimit: 0
   parallelism: 1
