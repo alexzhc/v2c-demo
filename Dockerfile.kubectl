@@ -1,0 +1,2 @@
+FROM docker.m.daocloud.io/alpine
+RUN apk add --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community kubectl helm yq bash

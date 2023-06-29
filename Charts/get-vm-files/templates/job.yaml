@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: get-vm-files-{{ .Values.vm.name }}
+spec:
+  backoffLimit: 0
+  parallelism: 1
+  template:
+    spec:
+      terminationGracePeriodSeconds: 0
+      restartPolicy: Never
+      containers:
+      - name: download
+        image: {{ .Values.job.image }}
+        imagePullPolicy: IfNotPresent
+        workingDir: /
+        env:
+        - name: VCSA_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: v2c-{{ .Values.vm.name }}
+              key: vcsa_username
+        - name: VCSA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: v2c-{{ .Values.vm.name }}
+              key: vcsa_password
+        command:
+        - /tool/get-vm-files
+        - {{ .Values.vm.name }}
+        volumeMounts:
+        - name: tool
+          mountPath: /tool
+          readOnly: true
+        - name: vm-files
+          mountPath: /vm
+      volumes:
+      - name: tool
+        configMap:
+          name: v2c-{{ .Values.vm.name }}
+          defaultMode: 0755
+      - name: vm-files
+        persistentVolumeClaim:
+          claimName: vm-files-{{ .Values.vm.name }}

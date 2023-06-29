@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: root-{{ .Values.vm.name }}-0
+spec:
+  storageClassName: {{ .Values.pvc.storageClass | required ".Values.pvc.storageClass is required!" }}
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.pvc.size }}

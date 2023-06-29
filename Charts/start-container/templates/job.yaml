@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: start-container-{{ .Values.vm.name }}
+spec:
+  backoffLimit: 0
+  parallelism: 1
+  template:
+    spec:
+      serviceAccount: start-container
+      terminationGracePeriodSeconds: 0
+      restartPolicy: Never
+      containers:
+      - name: prepare
+        image: {{ .Values.job.image }}
+        imagePullPolicy: IfNotPresent
+        workingDir: /
+        command:
+        - /tool/start-container
+        - {{ .Values.vm.name }}
+        volumeMounts:
+        - name: tool
+          mountPath: /tool
+          readOnly: true
+      volumes:
+      - name: tool
+        configMap:
+          name: v2c-{{ .Values.vm.name }}
+          defaultMode: 0755

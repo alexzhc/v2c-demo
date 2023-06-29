@@ -1,0 +1,3 @@
+FROM scratch
+STOPSIGNAL SIGRTMIN+3
+WORKDIR /root

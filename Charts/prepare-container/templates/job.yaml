@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: prepare-container-{{ .Values.vm.name }}
+spec:
+  backoffLimit: 0
+  parallelism: 1
+  template:
+    spec:
+      serviceAccount: prepare-container
+      terminationGracePeriodSeconds: 0
+      restartPolicy: Never
+      containers:
+      - name: prepare
+        image: {{ .Values.job.image }}
+        imagePullPolicy: IfNotPresent
+        workingDir: /
+        command:
+        - /tool/prepare-container
+        - {{ .Values.vm.name }}
+        - {{ .Values.vm.config }}
+        - {{ .Values.vm.diskFormat }}
+        volumeMounts:
+        - name: tool
+          mountPath: /tool
+          readOnly: true
+        - name: vm-files
+          mountPath: /vm
+          readOnly: true
+        - name: root-volume
+          mountPath: /vol
+      volumes:
+      - name: tool
+        configMap:
+          name: v2c-{{ .Values.vm.name }}
+          defaultMode: 0755
+      - name: vm-files
+        persistentVolumeClaim:
+          claimName: vm-files-{{ .Values.vm.name }}
+      - name: root-volume
+        persistentVolumeClaim:
+          claimName: root-{{ .Values.vm.name }}-0

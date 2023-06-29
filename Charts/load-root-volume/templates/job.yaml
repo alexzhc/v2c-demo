@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: load-root-volume-{{ .Values.vm.name }}
+spec:
+  backoffLimit: 0
+  parallelism: 1
+  template:
+    spec:
+      terminationGracePeriodSeconds: 0
+      restartPolicy: Never
+      containers:
+      - name: load
+        image: {{ .Values.job.image }}
+        imagePullPolicy: IfNotPresent
+        workingDir: /
+        securityContext:
+          privileged: true
+        command:
+        - /tool/load-root-volume
+        - {{ .Values.vm.disk }}
+        - {{ .Values.vm.diskFormat }}
+        volumeMounts:
+        - name: boot
+          mountPath: /boot
+          readOnly: true
+        - name: lib-modules
+          mountPath: /lib/modules
+          readOnly: true
+        - name: tool
+          mountPath: /tool
+          readOnly: true
+        - name: vm-files
+          mountPath: /vm
+          readOnly: true
+        - name: root-volume
+          mountPath: /vol
+      volumes:
+      - name: boot
+        hostPath:
+          path: /boot
+      - name: lib-modules
+        hostPath:
+          path: /lib/modules      
+      - name: tool
+        configMap:
+          name: v2c-{{ .Values.vm.name }}
+          defaultMode: 0755
+      - name: vm-files
+        persistentVolumeClaim:
+          claimName: vm-files-{{ .Values.vm.name }}
+      - name: root-volume
+        persistentVolumeClaim:
+          claimName: root-{{ .Values.vm.name }}-0

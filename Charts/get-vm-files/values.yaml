@@ -1,0 +1,7 @@
+vm:
+  name: vm
+job:
+  image: docker.m.daocloud.io/busybox
+pvc:
+  size: 10Gi
+  storageClass:

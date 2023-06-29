@@ -1,0 +1,7 @@
+vm:
+  name: vm
+job:
+  image: daocloud.io/daocloud/kubectl
+sts:
+  resources: {}
+  mountPath: {}

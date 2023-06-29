@@ -1,0 +1,10 @@
+vm:
+  name: vm
+  config: vm.xml
+  disk: vm.img
+  diskFormat: img
+job:
+  image: daocloud.io/daocloud/libguestfs-tools
+pvc:
+  size: 10Gi
+  storageClass:
