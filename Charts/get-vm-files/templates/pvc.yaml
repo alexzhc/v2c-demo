@@ -5,7 +5,7 @@ metadata:
 spec:
   storageClassName: {{ .Values.pvc.storageClass | required ".Values.pvc.storageClass is required!" }}
   accessModes:
-  - ReadWriteOnce
+  - {{ .Values.pvc.accessMode }}
   resources:
     requests:
       storage: {{ .Values.pvc.size }}

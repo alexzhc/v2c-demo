@@ -19,17 +19,17 @@ qemu-img check -f "$disk_format" "$disk" || exit 1
 # Mount
 echo Mount "$disk" to "$src_dir"
 if [ -d "$src_dir" ]; then
-    guestunmount -v --retry=3 "$src_dir" \
+    guestunmount -v --no-retry "$src_dir" \
     || umount -lf "$src_dir"
 else
     mkdir -vp "$src_dir"
 fi
 
 # Copy
-if guestmount -v --format="$disk_format" -a "$disk" -i --ro "$src_dir"; then
+if guestmount -v --format="$disk_format" -a "$disk" -i --ro "$src_dir" -o kernel_cache; then
     df -hT "$src_dir"
     ls -lh "$src_dir"
-    rsync -avAHXS --stats \
+    rsync -avAHS --stats \
     "${src_dir}/" "${dest_dir}/" \
     --exclude boot \
     --exclude sys \
@@ -38,8 +38,8 @@ if guestmount -v --format="$disk_format" -a "$disk" -i --ro "$src_dir"; then
     --exclude run \
     --exclude usr/lib/firmware \
     --exclude usr/lib/modules \
-        --delete \
-        --delete-excluded
+    --delete \
+    --delete-excluded
     sync
     guestunmount -v --retry=3 "$src_dir" \
     || umount -lf "$src_dir"

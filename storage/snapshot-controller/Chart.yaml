@@ -1,0 +1,6 @@
+apiVersion: v2
+appVersion: 6.0.1
+description: csi snapshot-controller
+name: snapshot-controller
+type: application
+version: 0.2.3

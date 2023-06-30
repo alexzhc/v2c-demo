@@ -1,0 +1,39 @@
+# Default values for snapshot-controller.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+
+controller:
+  enabled: true
+  rbac:
+    enabled: true
+
+  replicaCount: 1
+  image:
+    repository: k8s.m.daocloud.io/sig-storage/snapshot-controller
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+
+  args:
+  - "--v=5"
+  - "--leader-election=true"
+  - "--enable-distributed-snapshotting"
+  extraArgs: []
+
+validatingWebhook:
+  enabled: false
+  rbac:
+    enabled: true
+  replicaCount: 3
+  image:
+    repository: k8s.m.daocloud.io/sig-storage/snapshot-validation-webhook
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+

@@ -2,8 +2,10 @@ VM ?= lamp
 VM_CONF ?= lamp.ovf
 VM_DISK ?= lamp_disk0.vmdk
 VM_DISK_FORMAT ?= vmdk
-TMP_SC ?= local-path
-ROOT_SC ?= local-path
+NFS_SERVER ?= 192.168.254.5
+TMP_SC ?= local-hostpath
+ROOT_SC ?= nfs-zfs
+PVC_ACCESS_MODE=ReadWriteOncePod
 GET_VM_FILES_IMAGE ?= docker.m.daocloud.io/vmware/powerclicore 
 GET_VM_FILES_SCRIPT ?= ./sh/get-vm-files_vmware.ps1
 LOAD_ROOT_VOLUME_SCRIPT ?= ./sh/load-root-volume.sh
@@ -11,22 +13,44 @@ PREPARE_CONTAINER_SCRIPT ?= ./sh/prepare-container.sh
 START_CONTAINER_SCRIPT ?= ./sh/start-container.sh
 VCSA_USERNAME ?= vcsa
 VCSA_PASSWORD ?= vcsa
+KUBELET_ROOT=/var/snap/microk8s/common/var/lib/kubelet
 
+# Make container images
 docker:
 	for i in binless libguestfs-tools kubectl; do \
 		docker build . -f Dockerfile.$$i -t $$i; \
 	done
-
-kc:
-	docker build . -f Dockerfile.kubectl -t kubectl 
-
 push:
 	for i in binless libguestfs-tools kubectl; do \
 		docker tag $$i daocloud.io/daocloud/$$i; \
 		docker push daocloud.io/daocloud/$$i || \
 		docker push daocloud.io/daocloud/$$i; \
-	done 
+	done
 
+# Set up NFS and Local-Path storages
+nas:
+	helm upgrade --install zfs-nfs storage/democratic-csi/ \
+	--values storage/democratic-csi/zfs-generic-nfs.yaml \
+	--set node.kubeletHostPath=$(KUBELET_ROOT) \
+	--namespace democratic-csi
+un-nas:
+	helm delete zfs-nfs -n democratic-csi
+
+local:
+	helm install local-hostpath storage/democratic-csi/ \
+	--values storage/democratic-csi/local-hostpath.yaml \
+	--set node.kubeletHostPath=$(KUBELET_ROOT) \
+	--namespace democratic-csi \
+	--create-namespace
+un-local:
+	helm delete local-hostpath -n democratic-csi
+
+snapctrl:
+	helm install snapshot-controller storage/snapshot-controller \
+	--namespace kube-system
+
+
+# Prepare scripts and login
 prep:
 	kubectl delete configmap v2c-$(VM) || true
 	kubectl create configmap v2c-$(VM) \
@@ -39,11 +63,13 @@ prep:
 		--from-literal=vcsa_username='$(VCSA_USERNAME)' \
 		--from-literal=vcsa_password='$(VCSA_PASSWORD)'
 
+# Run stages
 run1:
-	helm install 1-get-vm-files-$(VM) ./Charts/get-vm-files/ \
+	helm install 1-get-vm-files-$(VM) ./charts/get-vm-files/ \
 		--set vm.name=$(VM) \
 		--set job.image=$(GET_VM_FILES_IMAGE) \
-		--set pvc.storageClass=$(TMP_SC)
+		--set pvc.storageClass=$(TMP_SC) \
+		--set pvc.accessMode=$(PVC_ACCESS_MODE)
 	kubectl wait --for=condition=complete --timeout=1200s job/1-get-vm-files-$(VM)
 unrun1:
 	helm uninstall 1-get-vm-files-$(VM)
@@ -52,11 +78,12 @@ log1:
 	kubectl logs -f job/1-get-vm-files-$(VM)
 
 run2:
-	helm install 2-load-root-volume-$(VM) ./Charts/load-root-volume/ \
+	helm install 2-load-root-volume-$(VM) ./charts/load-root-volume/ \
 		--set vm.name=$(VM) \
 		--set vm.disk=$(VM_DISK) \
 		--set vm.diskFormat=$(VM_DISK_FORMAT) \
-		--set pvc.storageClass=$(ROOT_SC)
+		--set pvc.storageClass=$(ROOT_SC) \
+		--set pvc.accessMode=$(PVC_ACCESS_MODE)	
 	kubectl wait --for=condition=complete --timeout=1200s job/2-load-root-volume-$(VM)
 unrun2:
 	helm uninstall 2-load-root-volume-$(VM)
@@ -65,7 +92,7 @@ log2:
 	kubectl logs -f job/2-load-root-volume-$(VM)
 
 run3:
-	helm install 3-prepare-container-$(VM) ./Charts/prepare-container/ \
+	helm install 3-prepare-container-$(VM) ./charts/prepare-container/ \
 		--set vm.name=$(VM) \
 		--set vm.config=$(VM_CONF) \
 		--set vm.diskFormat=$(VM_DISK_FORMAT)
@@ -78,7 +105,7 @@ log3:
 
 run4:
 	kubectl get cm v2c-$(VM)-conf -o yaml | yq '.data["values.yaml"]' > /tmp/values.yaml
-	helm install 4-start-container-$(VM) ./Charts/start-container/ \
+	helm install 4-start-container-$(VM) ./charts/start-container/ \
 		--set vm.name=$(VM) \
 		-f /tmp/values.yaml
 	watch kubectl get po
@@ -94,6 +121,7 @@ unall: unrun4 unrun3 unrun2 unrun1
 	kubectl delete secret v2c-$(VM)
 uall: unall
 
+# Operate the container
 ssh: 
 	node=$$(kubectl get po $(VM)-0 -o yaml | yq .spec.nodeName); \
 	ip=$$(kubectl get no $$node -o yaml | yq '.status.addresses[] | select (.type=="InternalIP") | .address'); \
@@ -105,6 +133,31 @@ curl:
 	ip=$$(kubectl get no $$node -o yaml | yq '.status.addresses[] | select (.type=="InternalIP") | .address'); \
 	port=$$(kubectl get svc $(VM) -o yaml | yq '.spec.ports[] | select(.name == "http") | .nodePort'); \
 	curl http://$$ip:$$port/info.php
+
+stop:
+	kubectl scale sts/$(VM) --replicas=0
+start:
+	kubectl scale sts/$(VM) --replicas=1
+restart:
+	kubectl rollout restart sts/$(M)
+move:
+	node=$$(kubectl get po $(VM)-0 -o yaml | yq .spec.nodeName); \
+	kubectl cordon $$node; \
+	kubectl rollout restart sts $(M); \
+	kubectl wait --for=jsonpath='{.status.phase}'=Pending --timeout=60s pod/$(VM)-0; \
+	kubectl uncordon $$node
+
+clone:
+	kubectl apply -f clone.yaml
+unclone:
+	kubectl delete -f clone.yaml
+
+snap:
+	kubectl apply -f snapshot.yaml
+unsnap:
+	kubectl delete -f snapshot.yaml
+
+
 
 
 
