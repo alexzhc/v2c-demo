@@ -1,6 +1,6 @@
 #!/bin/pwsh
 
-Set-PowerCLIConfiguration -Scope AllUsers -ParticipateInCEIP $false -Confirm:$false
+# Set-PowerCLIConfiguration -Scope AllUsers -ParticipateInCEIP $false -Confirm:$false
 Set-PowerCLIConfiguration -InvalidCertificateAction:Ignore -Confirm:$false
 
 if (!$args) {
@@ -14,7 +14,7 @@ Remove-Item ./vm/$vmName -Recurse -Force
 New-Item ./vm -ItemType "directory" -Force
 
 Write-Host -ForegroundColor blue "Login into VCSA Server"
-Connect-VIServer -Server 'vcsa.daocloud.io' -verbose -user $Env:VCSA_USERNAME -Password $Env:VCSA_PASSWORD
+Connect-VIServer -Server $Env:VCSA_HOST -verbose -user $Env:VCSA_USERNAME -Password $Env:VCSA_PASSWORD
 
 Write-Host -ForegroundColor blue "Shut down VM '$($vmName)'"
 

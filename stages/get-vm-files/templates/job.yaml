@@ -15,6 +15,11 @@ spec:
         imagePullPolicy: IfNotPresent
         workingDir: /
         env:
+        - name: VCSA_HOST
+          valueFrom:
+            secretKeyRef:
+              name: v2c-{{ .Values.vm.name }}
+              key: vcsa_host
         - name: VCSA_USERNAME
           valueFrom:
             secretKeyRef:

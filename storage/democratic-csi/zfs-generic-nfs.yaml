@@ -48,11 +48,11 @@ driver:
     # YOU MUST COPY THE DATA HERE INLINE!
     driver: zfs-generic-nfs
     sshConnection:
-      host: 192.168.254.5
+      host: ""
       port: 22
-      username: root
+      username: ""
       # use either password or key
-      password: "ABcd1234"
+      password: ""
       privateKey: ""
 
     zfs:

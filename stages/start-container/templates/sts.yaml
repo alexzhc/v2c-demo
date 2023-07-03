@@ -21,7 +21,7 @@ spec:
       containers:
       - name: {{ .Values.vm.name }}
         image: daocloud.io/daocloud/binless
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         resources:
           {{- toYaml .Values.sts.resources | nindent 12 }}
         command:

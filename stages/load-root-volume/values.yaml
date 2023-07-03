@@ -6,6 +6,6 @@ vm:
 job:
   image: daocloud.io/daocloud/libguestfs-tools
 pvc:
-  size: 10Gi
+  size: 5Gi
   storageClass:
   accessMode: ReadWriteOnce
