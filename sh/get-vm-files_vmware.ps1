@@ -9,9 +9,9 @@ if (!$args) {
 }
 $vmName=$args[0]
 
-Write-Host -ForegroundColor blue "Cleanp up ./vm/$vmName"
-Remove-Item ./vm/$vmName -Recurse -Force
-New-Item ./vm -ItemType "directory" -Force
+# Write-Host -ForegroundColor blue "Cleanp up ./vm/$vmName"
+# Remove-Item ./vm/$vmName -Recurse -Force
+# New-Item ./vm -ItemType "directory" -Force
 
 Write-Host -ForegroundColor blue "Login into VCSA Server"
 Connect-VIServer -Server $Env:VCSA_HOST -verbose -user $Env:VCSA_USERNAME -Password $Env:VCSA_PASSWORD

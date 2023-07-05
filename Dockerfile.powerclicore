@@ -1,0 +1,3 @@
+FROM docker.m.daocloud.io/vmware/powerclicore
+RUN pwsh -c 'Set-PowerCLIConfiguration -Scope AllUsers -ParticipateInCEIP $false -Confirm:$false' && \
+    pwsh -c 'Set-PowerCLIConfiguration -InvalidCertificateAction:Ignore -Confirm:$false'

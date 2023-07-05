@@ -1,5 +1,7 @@
 #!/bin/bash -x
 
+# export LIBGUESTFS_BACKEND_SETTINGS=force_kvm
+
 disk=./vm/$1
 disk_format=$2
 
@@ -38,6 +40,13 @@ if guestmount -v --format="$disk_format" -a "$disk" -i --ro "$src_dir" -o kernel
     --exclude run \
     --exclude usr/lib/firmware \
     --exclude usr/lib/modules \
+    --exclude usr/src \
+    --exclude usr/share/man \
+    --exclude usr/share/locale \
+    --exclude usr/share/zoneinfo \
+    --exclude var/snap \
+    --exclude var/cache \
+    --exclude swap.img \
     --delete \
     --delete-excluded
     sync

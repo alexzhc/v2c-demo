@@ -13,10 +13,17 @@ ssh_port=$(cat ./vol/etc/ssh/sshd_config | awk '/^Port/ {print $2}')
 [ -z "$http_port" ] && http_port=80
 [ -z "$ssh_port" ] && ssh_port=22
 
-# Disable selinux and firewalld
+# Sorting systemd
 sed -i 's/^SELINUX=.*/SELINUX=disabled/' ./vol/etc/selinux/config
-rm -vf ./vol/etc/systemd/system/dbus-org.fedoraproject.FirewallD1.service
-rm -vf ./vol/etc/systemd/system/multi-user.target.wants/firewalld.service
+# mv ./vol/etc/systemd/system/multi-user.target.wants /vol/etc/systemd/system/multi-user.target.wants.bak
+# mkdir -vp ./vol/etc/systemd/system/multi-user.target.wants
+# mv -v ./vol/etc/systemd/system/multi-user.target.wants.bak/sshd.service ./vol/etc/systemd/system/multi-user.target.wants/
+# mv -v ./vol/etc/systemd/system/multi-user.target.wants.bak/mariadb.service ./vol/etc/systemd/system/multi-user.target.wants/
+
+# Replace systemd
+# mv -vf ./vol/usr/bin/systemctl ./vol/var/
+# install -v ./tool/systemctl ./vol/usr/bin/systemctl
+# ls -lh ./vol/usr/bin/systemctl
 
 # Get VM CPU and Memory configuration
 if [ ! -f "$config" ]; then

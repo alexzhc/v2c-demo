@@ -22,23 +22,25 @@ spec:
       - name: {{ .Values.vm.name }}
         image: daocloud.io/daocloud/binless
         imagePullPolicy: IfNotPresent
+        # securityContext:
+        #   privileged: true
         resources:
           {{- toYaml .Values.sts.resources | nindent 12 }}
         command:
-          - /sbin/init
+          - /sbin/init # systemd replacement
         ports:
         - containerPort: {{ .Values.ports.ssh }}
           name: ssh
         - containerPort: {{ .Values.ports.http }}
           name: http
         readinessProbe:
-          # tcpSocket:
-          #   port: ssh # default as ssh; for apps, use app port such as http's 80
-          exec: # for empty os, just check if journald is up
-            command:
-            - systemctl
-            - is-active
-            - systemd-journald
+          tcpSocket:
+            port: ssh # default as ssh; for apps, use app port such as http's 80
+          # exec: # for empty os, just check if journald is up
+          #   command:
+          #   - systemctl
+          #   - is-active
+          #   - systemd-journald
           initialDelaySeconds: 10
           periodSeconds: 3
         volumeMounts:
@@ -47,6 +49,8 @@ spec:
           readOnly: true
         - name: run
           mountPath: /run
+        # - name: dbus
+        #   mountPath: /run/dbus
         {{- toYaml .Values.sts.volumeMounts | nindent 8 }}
       volumes:
       - name: cgroup
@@ -55,6 +59,9 @@ spec:
       - name: run
         emptyDir:
           medium: Memory
+      # - name: dbus
+      #   hostPath:
+      #     path: /run/dbus
       - name: root
         persistentVolumeClaim:
           claimName: root-{{ .Values.vm.name }}-0

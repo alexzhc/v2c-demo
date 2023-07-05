@@ -12,12 +12,13 @@ TMP_SC ?= local-hostpath
 ROOT_SC ?= nfs-zfs
 PVC_ACCESS_MODE=ReadWriteOnce # or ReadWriteOnce for k8s >= 1.22
 
-GET_VM_FILES_IMAGE ?= docker.m.daocloud.io/vmware/powerclicore 
+GET_VM_FILES_IMAGE ?= daocloud.io/daocloud/powerclicore:no-cert-check
 GET_VM_FILES_SCRIPT ?= ./sh/get-vm-files_vmware.ps1
 
 LOAD_ROOT_VOLUME_SCRIPT ?= ./sh/load-root-volume.sh
 PREPARE_CONTAINER_SCRIPT ?= ./sh/prepare-container.sh
 START_CONTAINER_SCRIPT ?= ./sh/start-container.sh
+SYSTEMCTL_REPLACE ?= ./sh/systemctl.py
 
 VCSA_HOST ?= vcsa # change to your own
 VCSA_USERNAME ?= vcsa # change to your own
@@ -38,7 +39,7 @@ push:
 	done
 
 # Set up NFS and Local-Path storages
-nfs:
+nfs: snapctrl
 	helm upgrade --install zfs-nfs storage/democratic-csi/ \
 	--namespace democratic-csi --create-namespace \
 	--values storage/democratic-csi/zfs-generic-nfs.yaml \
@@ -60,7 +61,7 @@ un-local:
 	helm delete local-hostpath -n democratic-csi
 
 snapctrl:
-	helm install snapshot-controller storage/snapshot-controller \
+	helm upgrade --install snapshot-controller storage/snapshot-controller \
 	--namespace kube-system
 
 # Prepare scripts and login
@@ -70,7 +71,8 @@ prep:
 		--from-file=get-vm-files=$(GET_VM_FILES_SCRIPT) \
 		--from-file=load-root-volume=$(LOAD_ROOT_VOLUME_SCRIPT) \
 		--from-file=prepare-container=$(PREPARE_CONTAINER_SCRIPT) \
-		--from-file=start-container=$(START_CONTAINER_SCRIPT)
+		--from-file=start-container=$(START_CONTAINER_SCRIPT) \
+		--from-file=systemctl=$(SYSTEMCTL_REPLACE)
 	kubectl delete secret v2c-$(VM) || true
 	kubectl create secret generic v2c-$(VM) \
 		--from-literal=vcsa_host='$(VCSA_HOST)' \

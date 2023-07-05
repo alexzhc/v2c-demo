@@ -3,6 +3,6 @@ vm:
 job:
   image: docker.m.daocloud.io/busybox
 pvc:
-  size: 5Gi
+  size: 10Gi
   storageClass:
   accessMode: ReadWriteOnce
