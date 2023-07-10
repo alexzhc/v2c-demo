@@ -3,6 +3,6 @@ kind: VolumeSnapshot
 metadata:
   name: root-{{ .Values.vm.name }}-snapshot-0
 spec:
-  volumeSnapshotClassName: iscsi-zfs
+  volumeSnapshotClassName: {{ .Values.volumeSnapshot.class }}
   source:
     persistentVolumeClaimName: root-{{ .Values.vm.name }}-0

@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ .Values.vm.name }}-restored-from-snapshot-0
+  name: {{ .Values.vm.name }}-restored-from-snapshot
 spec:
   selector:
     matchLabels:
-      app: {{ .Values.vm.name }}-restored-from-snapshot-0
-  serviceName: {{ .Values.vm.name }}-restored-from-snapshot-0
+      app: {{ .Values.vm.name }}-restored-from-snapshot
+  serviceName: {{ .Values.vm.name }}-restored-from-snapshot
   replicas: 1
   template:
     metadata:
       labels:
-        app: {{ .Values.vm.name }}-restored-from-snapshot-0
+        app: {{ .Values.vm.name }}-restored-from-snapshot
     spec:
       # nodeSelector:
       #   kubernetes.io/hostname: k8s-worker-1
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
-      # hostname: {{ .Values.vm.name }}-restored-from-snapshot-0
+      # hostname: {{ .Values.vm.name }}-restored-from-snapshot
       containers:
-      - name: {{ .Values.vm.name }}-restored-from-snapshot-0
+      - name: {{ .Values.vm.name }}-restored-from-snapshot
         image: daocloud.io/daocloud/binless
         imagePullPolicy: IfNotPresent
         # securityContext:
@@ -69,13 +69,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.vm.name }}-restored-from-snapshot-0
+  name: {{ .Values.vm.name }}-restored-from-snapshot
   labels:
-    app: {{ .Values.vm.name }}-restored-from-snapshot-0
+    app: {{ .Values.vm.name }}-restored-from-snapshot
 spec:
   type: NodePort
   selector:
-    app: {{ .Values.vm.name }}-restored-from-snapshot-0
+    app: {{ .Values.vm.name }}-restored-from-snapshot
   ports:
   - port: {{ .Values.ports.ssh }}
     name: ssh

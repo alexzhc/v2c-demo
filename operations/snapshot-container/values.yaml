@@ -3,6 +3,8 @@ vm:
 sts:
   resources: {}
   volumeMounts: []
+volumeSnapshot:
+  class:
 pvc:
   size: 10Gi
   storageClass:

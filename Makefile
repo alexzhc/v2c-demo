@@ -202,6 +202,7 @@ snap:
 	helm install snapshot-container-$(VM) ./operations/snapshot-container/ \
 		--set vm.name=$(VM) \
 		--set pvc.storageClass=$(ROOT_SC) \
+		--set volumeSnapshot.class=$(ROOT_SC) \
 		--set pvc.accessMode=$(PVC_ACCESS_MODE) \
 		-f /tmp/values.yaml
 	watch kubectl get po
