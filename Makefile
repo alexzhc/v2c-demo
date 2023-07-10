@@ -8,8 +8,14 @@ NFS_HOST_SSH ?= ssh.nfs.local # change to your own
 NFS_HOST_SSH_USERNAME ?= ssh # change to your own
 NFS_HOST_SSH_PASSWORD ?= ssh # change to your own
 
+ISCSI_HOST_PORTAL ?= "" # change to your own
+ISCSI_HOST_INTERFACE ?= "" # change to your own
+ISCSI_HOST_SSH ?= ssh.scsi.local # change to your own
+ISCSI_HOST_SSH_USERNAME ?= ssh # change to your own
+ISCSI_HOST_SSH_PASSWORD ?= ssh # change to your own
+
 TMP_SC ?= local-hostpath
-ROOT_SC ?= nfs-zfs
+ROOT_SC ?= iscsi-zfs
 PVC_ACCESS_MODE=ReadWriteOnce # or ReadWriteOnce for k8s >= 1.22
 
 GET_VM_FILES_IMAGE ?= daocloud.io/daocloud/powerclicore:no-cert-check
@@ -51,7 +57,22 @@ nfs: snapctrl
 un-nfs:
 	helm delete zfs-nfs -n democratic-csi
 
-local:
+# targetcli host: "pip install rtslib-fb" 
+# for error "Not a directory: '/sys/kernel/config/target/iscsi/cpus_allowed_list"
+# fix in v2.1.76 https://github.com/open-iscsi/rtslib-fb/commit/8d2543c4da62e962661011fea5b19252b9660822
+iscsi:
+	helm upgrade --install zfs-iscsi storage/democratic-csi/ \
+	--namespace democratic-csi --create-namespace \
+	--values storage/democratic-csi/zfs-generic-iscsi.yaml \
+	--set node.kubeletHostPath=$(KUBELET_ROOT) \
+	--set driver.config.sshConnection.host=$(ISCSI_HOST_SSH) \
+	--set driver.config.sshConnection.username=$(ISCSI_HOST_SSH_USERNAME) \
+	--set driver.config.sshConnection.password=$(ISCSI_HOST_SSH_PASSWORD) \
+    --set driver.config.iscsi.targetPortal=$(ISCSI_HOST_PORTAL)
+un-iscsi:
+	helm delete zfs-iscsi -n democratic-csi
+
+local: 
 	helm install local-hostpath storage/democratic-csi/ \
 	--values storage/democratic-csi/local-hostpath.yaml \
 	--set node.kubeletHostPath=$(KUBELET_ROOT) \
@@ -164,14 +185,14 @@ move:
 	kubectl uncordon $$node
 
 clone:
-	kubectl apply -f clone.yaml
+	kubectl apply -f yaml/clone.yaml
 unclone:
-	kubectl delete -f clone.yaml
+	kubectl delete -f yaml/clone.yaml
 
 snap:
-	kubectl apply -f snapshot.yaml
+	kubectl apply -f yaml/snapshot.yaml
 unsnap:
-	kubectl delete -f snapshot.yaml
+	kubectl delete -f yaml/snapshot.yaml
 
 
 

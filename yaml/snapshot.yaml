@@ -3,6 +3,6 @@ kind: VolumeSnapshot
 metadata:
   name: root-lamp-snapshot
 spec:
-  volumeSnapshotClassName: nfs-zfs
+  volumeSnapshotClassName: iscsi-zfs
   source:
     persistentVolumeClaimName: root-lamp-0

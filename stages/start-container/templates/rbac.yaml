@@ -23,6 +23,13 @@ rules:
   - get
   - watch
   - list
+- apiGroups: ["apps"]
+  resources:
+  - statefulsets
+  verbs:
+  - get
+  - watch
+  - list
 ---
 apiVersion: v1
 kind: ServiceAccount
