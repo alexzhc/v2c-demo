@@ -1,0 +1,13 @@
+vm:
+  name: vm
+sts:
+  resources: {}
+  volumeMounts: []
+pvc:
+  size: 10Gi
+  storageClass:
+  accessMode: ReadWriteOnce
+  volumeMode: Filesystem
+ports:
+  ssh: 22
+  http: 80

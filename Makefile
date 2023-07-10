@@ -16,7 +16,8 @@ ISCSI_HOST_SSH_PASSWORD ?= ssh # change to your own
 
 TMP_SC ?= local-hostpath
 ROOT_SC ?= iscsi-zfs
-PVC_ACCESS_MODE=ReadWriteOnce # or ReadWriteOnce for k8s >= 1.22
+PVC_ACCESS_MODE=ReadWriteOnce # or ReadWriteOncePod for k8s >= 1.22
+PVC_VOLUME_MODE=Filesystem # or Block 
 
 GET_VM_FILES_IMAGE ?= daocloud.io/daocloud/powerclicore:no-cert-check
 GET_VM_FILES_SCRIPT ?= ./sh/get-vm-files_vmware.ps1
@@ -68,7 +69,7 @@ iscsi:
 	--set driver.config.sshConnection.host=$(ISCSI_HOST_SSH) \
 	--set driver.config.sshConnection.username=$(ISCSI_HOST_SSH_USERNAME) \
 	--set driver.config.sshConnection.password=$(ISCSI_HOST_SSH_PASSWORD) \
-    --set driver.config.iscsi.targetPortal=$(ISCSI_HOST_PORTAL)
+	--set driver.config.iscsi.targetPortal=$(ISCSI_HOST_PORTAL)
 un-iscsi:
 	helm delete zfs-iscsi -n democratic-csi
 
@@ -100,9 +101,9 @@ prep:
 		--from-literal=vcsa_username='$(VCSA_USERNAME)' \
 		--from-literal=vcsa_password='$(VCSA_PASSWORD)'
 
-# Run stages
+# Run steps
 run1:
-	helm install 1-get-vm-files-$(VM) ./stages/get-vm-files/ \
+	helm install 1-get-vm-files-$(VM) ./steps/get-vm-files/ \
 		--set vm.name=$(VM) \
 		--set job.image=$(GET_VM_FILES_IMAGE) \
 		--set pvc.storageClass=$(TMP_SC) \
@@ -115,12 +116,13 @@ log1:
 	kubectl logs -f job/1-get-vm-files-$(VM)
 
 run2:
-	helm install 2-load-root-volume-$(VM) ./stages/load-root-volume/ \
+	helm install 2-load-root-volume-$(VM) ./steps/load-root-volume/ \
 		--set vm.name=$(VM) \
 		--set vm.disk=$(VM_DISK) \
 		--set vm.diskFormat=$(VM_DISK_FORMAT) \
 		--set pvc.storageClass=$(ROOT_SC) \
-		--set pvc.accessMode=$(PVC_ACCESS_MODE)	
+		--set pvc.accessMode=$(PVC_ACCESS_MODE) \
+		--set pvc.volumeMode=$(PVC_VOLUME_MODE)
 	kubectl wait --for=condition=complete --timeout=1200s job/2-load-root-volume-$(VM)
 unrun2:
 	helm uninstall 2-load-root-volume-$(VM)
@@ -129,7 +131,7 @@ log2:
 	kubectl logs -f job/2-load-root-volume-$(VM)
 
 run3:
-	helm install 3-prepare-container-$(VM) ./stages/prepare-container/ \
+	helm install 3-prepare-container-$(VM) ./steps/prepare-container/ \
 		--set vm.name=$(VM) \
 		--set vm.config=$(VM_CONF) \
 		--set vm.diskFormat=$(VM_DISK_FORMAT)
@@ -142,7 +144,7 @@ log3:
 
 run4:
 	kubectl get cm v2c-$(VM)-conf -o yaml | yq '.data["values.yaml"]' > /tmp/values.yaml
-	helm install 4-start-container-$(VM) ./stages/start-container/ \
+	helm install 4-start-container-$(VM) ./steps/start-container/ \
 		--set vm.name=$(VM) \
 		-f /tmp/values.yaml
 	watch kubectl get po
@@ -185,14 +187,26 @@ move:
 	kubectl uncordon $$node
 
 clone:
-	kubectl apply -f yaml/clone.yaml
+	kubectl get cm v2c-$(VM)-conf -o yaml | yq '.data["values.yaml"]' > /tmp/values.yaml
+	helm install clone-container-$(VM) ./operations/clone-container/ \
+		--set vm.name=$(VM) \
+		--set pvc.storageClass=$(ROOT_SC) \
+		--set pvc.accessMode=$(PVC_ACCESS_MODE) \
+		-f /tmp/values.yaml
+	watch kubectl get po
 unclone:
-	kubectl delete -f yaml/clone.yaml
+	helm uninstall clone-container-$(VM)
 
 snap:
-	kubectl apply -f yaml/snapshot.yaml
+	kubectl get cm v2c-$(VM)-conf -o yaml | yq '.data["values.yaml"]' > /tmp/values.yaml
+	helm install snapshot-container-$(VM) ./operations/snapshot-container/ \
+		--set vm.name=$(VM) \
+		--set pvc.storageClass=$(ROOT_SC) \
+		--set pvc.accessMode=$(PVC_ACCESS_MODE) \
+		-f /tmp/values.yaml
+	watch kubectl get po
 unsnap:
-	kubectl delete -f yaml/snapshot.yaml
+	helm uninstall snapshot-container-$(VM)
 
 
 

@@ -9,3 +9,4 @@ pvc:
   size: 10Gi
   storageClass:
   accessMode: ReadWriteOnce
+  volumeMode: Filesystem 

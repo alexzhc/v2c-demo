@@ -18,6 +18,8 @@ fi
 echo Verify "$disk" consistency
 qemu-img check -f "$disk_format" "$disk" || exit 1
 
+# tail -f /dev/null
+
 # Mount
 echo Mount "$disk" to "$src_dir"
 if [ -d "$src_dir" ]; then

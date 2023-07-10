@@ -1,8 +1,8 @@
 apiVersion: snapshot.storage.k8s.io/v1
 kind: VolumeSnapshot
 metadata:
-  name: root-lamp-snapshot
+  name: root-{{ .Values.vm.name }}-snapshot-0
 spec:
   volumeSnapshotClassName: iscsi-zfs
   source:
-    persistentVolumeClaimName: root-lamp-0
+    persistentVolumeClaimName: root-{{ .Values.vm.name }}-0

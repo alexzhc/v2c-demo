@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.vm.name }}-restored-from-snapshot-0
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.vm.name }}-restored-from-snapshot-0
+  serviceName: {{ .Values.vm.name }}-restored-from-snapshot-0
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.vm.name }}-restored-from-snapshot-0
+    spec:
+      # nodeSelector:
+      #   kubernetes.io/hostname: k8s-worker-1
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      # hostname: {{ .Values.vm.name }}-restored-from-snapshot-0
+      containers:
+      - name: {{ .Values.vm.name }}-restored-from-snapshot-0
+        image: daocloud.io/daocloud/binless
+        imagePullPolicy: IfNotPresent
+        # securityContext:
+        #   privileged: true
+        resources:
+          {{- toYaml .Values.sts.resources | nindent 12 }}
+        command:
+          - /sbin/init # systemd replacement
+        ports:
+        - containerPort: {{ .Values.ports.ssh }}
+          name: ssh
+        - containerPort: {{ .Values.ports.http }}
+          name: http
+        readinessProbe:
+          tcpSocket:
+            port: ssh # default as ssh; for apps, use app port such as http's 80
+          # exec: # for empty os, just check if journald is up
+          #   command:
+          #   - systemctl
+          #   - is-active
+          #   - systemd-journald
+          initialDelaySeconds: 10
+          periodSeconds: 3
+        volumeMounts:
+        - name: cgroup
+          mountPath: /sys/fs/cgroup
+          readOnly: true
+        - name: run
+          mountPath: /run
+        # - name: dbus
+        #   mountPath: /run/dbus
+        {{- toYaml .Values.sts.volumeMounts | nindent 8 }}
+      volumes:
+      - name: cgroup
+        hostPath:
+          path: /sys/fs/cgroup
+      - name: run
+        emptyDir:
+          medium: Memory
+      # - name: dbus
+      #   hostPath:
+      #     path: /run/dbus
+      - name: root
+        persistentVolumeClaim:
+          claimName: root-{{ .Values.vm.name }}-restored-from-snapshot-0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.vm.name }}-restored-from-snapshot-0
+  labels:
+    app: {{ .Values.vm.name }}-restored-from-snapshot-0
+spec:
+  type: NodePort
+  selector:
+    app: {{ .Values.vm.name }}-restored-from-snapshot-0
+  ports:
+  - port: {{ .Values.ports.ssh }}
+    name: ssh
+  - port: {{ .Values.ports.http }}
+    name: http

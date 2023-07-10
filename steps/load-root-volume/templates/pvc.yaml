@@ -6,6 +6,7 @@ spec:
   storageClassName: {{ .Values.pvc.storageClass | required ".Values.pvc.storageClass is required!" }}
   accessModes:
   - {{ .Values.pvc.accessMode }}
+  volumeMode: {{ .Values.pvc.volumeMode }}
   resources:
     requests:
       storage: {{ .Values.pvc.size }}
