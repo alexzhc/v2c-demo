@@ -39,18 +39,15 @@ if guestmount -v --format="$disk_format" -a "$disk" -i --ro "$src_dir" -o kernel
     --exclude sys \
     --exclude proc \
     --exclude dev \
-    --exclude run \
     --exclude usr/lib/firmware \
     --exclude usr/lib/modules \
     --exclude usr/src \
-    --exclude usr/share/man \
-    --exclude usr/share/locale \
-    --exclude usr/share/zoneinfo \
     --exclude var/snap \
     --exclude var/cache \
     --exclude swap.img \
     --delete \
     --delete-excluded
+    # --exclude run \
     sync
     guestunmount -v --retry=3 "$src_dir" \
     || umount -lf "$src_dir"

@@ -3,4 +3,4 @@ vm:
   config: vm.xml
   diskFormat: vmdk
 job:
-  image: daocloud.io/daocloud/kubectl 
+  image: daocloud.io/daocloud/systemd

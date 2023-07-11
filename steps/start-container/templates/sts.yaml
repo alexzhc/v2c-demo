@@ -27,7 +27,7 @@ spec:
         resources:
           {{- toYaml .Values.sts.resources | nindent 12 }}
         command:
-          - /sbin/init # systemd replacement
+        - /sbin/init # systemd replacement
         ports:
         - containerPort: {{ .Values.ports.ssh }}
           name: ssh
@@ -44,24 +44,19 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 3
         volumeMounts:
-        - name: cgroup
-          mountPath: /sys/fs/cgroup
-          readOnly: true
-        - name: run
-          mountPath: /run
-        # - name: dbus
-        #   mountPath: /run/dbus
+        # - name: cgroup
+        #   mountPath: /sys/fs/cgroup
+        #   readOnly: true
+        # - name: run
+        #   mountPath: /run
         {{- toYaml .Values.sts.volumeMounts | nindent 8 }}
       volumes:
-      - name: cgroup
-        hostPath:
-          path: /sys/fs/cgroup
-      - name: run
-        emptyDir:
-          medium: Memory
-      # - name: dbus
+      # - name: cgroup
       #   hostPath:
-      #     path: /run/dbus
+      #     path: /sys/fs/cgroup
+      # - name: run
+      #   emptyDir:
+      #     medium: Memory
       - name: root
         persistentVolumeClaim:
           claimName: root-{{ .Values.vm.name }}-0

@@ -29,6 +29,12 @@ spec:
           readOnly: true
         - name: root-volume
           mountPath: /vol
+        - name: root-volume
+          mountPath: /run
+          subPath: run
+        - name: root-volume
+          mountPath: /var/run
+          subPath: var/run
       volumes:
       - name: tool
         configMap:

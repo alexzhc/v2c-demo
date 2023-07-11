@@ -35,11 +35,11 @@ KUBELET_ROOT=/var/snap/microk8s/common/var/lib/kubelet
 
 # Make container images
 docker:
-	for i in binless libguestfs-tools kubectl; do \
+	for i in binless binless:3 libguestfs-tools systemd; do \
 		docker build . -f Dockerfile.$$i -t $$i; \
 	done
 push:
-	for i in binless libguestfs-tools kubectl; do \
+	for i in binless binless:3 libguestfs-tools systemd; do \
 		docker tag $$i daocloud.io/daocloud/$$i; \
 		docker push daocloud.io/daocloud/$$i || \
 		docker push daocloud.io/daocloud/$$i; \
@@ -177,8 +177,8 @@ stop:
 	kubectl scale sts/$(VM) --replicas=0
 start:
 	kubectl scale sts/$(VM) --replicas=1
-restart:
-	kubectl rollout restart sts/$(VM)
+restart: stop start
+
 move:
 	node=$$(kubectl get po $(VM)-0 -o yaml | yq .spec.nodeName); \
 	kubectl cordon $$node; \
@@ -208,6 +208,9 @@ snap:
 	watch kubectl get po
 unsnap:
 	helm uninstall snapshot-container-$(VM)
+
+tty:
+	kubectl exec -it sts/$(VM) -- bash
 
 
 
