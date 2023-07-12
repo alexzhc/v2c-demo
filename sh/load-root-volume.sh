@@ -1,6 +1,13 @@
 #!/bin/bash -x
 
-# export LIBGUESTFS_BACKEND_SETTINGS=force_kvm
+export LIBGUESTFS_BACKEND=direct
+
+if [ -c /dev/kvm ] && lsmod | grep kvm_intel; then 
+    export LIBGUESTFS_BACKEND_SETTINGS=force_kvm
+else
+    export LIBGUESTFS_BACKEND_SETTINGS=force_tcg
+fi
+printenv LIBGUESTFS_BACKEND_SETTINGS
 
 disk=./vm/$1
 disk_format=$2

@@ -3,6 +3,8 @@ VM_CONF ?= lamp.ovf
 VM_DISK ?= lamp_disk0.vmdk
 VM_DISK_FORMAT ?= vmdk
 
+USE_KVM ?= false
+
 NFS_HOST_SHARE ?= server.nfs.local # change to your own
 NFS_HOST_SSH ?= ssh.nfs.local # change to your own
 NFS_HOST_SSH_USERNAME ?= ssh # change to your own
@@ -117,6 +119,7 @@ log1:
 
 run2:
 	helm install 2-load-root-volume-$(VM) ./steps/load-root-volume/ \
+		--set libguestfs.kvm.enabled=$(USE_KVM) \
 		--set vm.name=$(VM) \
 		--set vm.disk=$(VM_DISK) \
 		--set vm.diskFormat=$(VM_DISK_FORMAT) \

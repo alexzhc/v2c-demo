@@ -1,11 +1,9 @@
 FROM ubuntu:mantic
 RUN apt update && \
     DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC \
-    apt install -y --no-install-recommends libguestfs-tools rsync parallel && \
+    apt install -y --no-install-recommends libguestfs-tools rsync parallel wget && \
     apt clean -y
-ENV LIBGUESTFS_BACKEND direct
-ENV LIBGUESTFS_BACKEND_SETTINGS force_tcg
-RUN apt update && \
-    DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC \
-    apt install -y --no-install-recommends yq && \
-    apt clean -y
+RUN wget --no-check-certificate https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq && \
+    chmod +x /usr/local/bin/yq
+# ENV LIBGUESTFS_BACKEND direct
+# ENV LIBGUESTFS_BACKEND_SETTINGS force_tcg
