@@ -4,3 +4,8 @@ vm:
   diskFormat: vmdk
 job:
   image: daocloud.io/daocloud/systemd
+pvc:
+  size: 10Gi
+  storageClass:
+  accessMode: ReadWriteOnce
+  volumeMode: Filesystem

@@ -39,18 +39,20 @@ spec:
           readOnly: true
         - name: root-volume
           mountPath: /vol
-        # - name: dev
-        #   mountPath: /dev
+          readOnly: true
+        - name: dev
+          mountPath: /dev
         # volumeDevices:
         # - name: root-volume
-        #   devicePath: /vol
+        #   devicePath: /dev/vol
       volumes:
       - name: boot
         hostPath:
           path: /boot
-      # - name: dev
-      #   hostPath:
-      #     path: /dev
+      - name: dev
+        hostPath:
+          path: /dev
+          type: Directory
       - name: lib-modules
         hostPath:
           path: /lib/modules
