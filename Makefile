@@ -1,8 +1,11 @@
 VM ?= lamp
 VM_CONF ?= lamp.ovf
-VM_DISK ?= lamp_disk0.vmdk
+# VM_DISK ?= lamp_disk0.vmdk #powercli
+VM_DISK ?= lamp-disk-0.vmdk
 VM_DISK_FORMAT ?= vmdk
 
+# EXTRACT_METHOD ?= 7zip
+EXTRACT_METHOD ?= libguestfs
 USE_KVM ?= false
 
 NFS_HOST_SHARE ?= server.nfs.local # change to your own
@@ -21,8 +24,10 @@ ROOT_SC ?= iscsi-zfs
 PVC_ACCESS_MODE=ReadWriteOnce # or ReadWriteOncePod for k8s >= 1.22
 PVC_VOLUME_MODE=Filesystem # or Block 
 
-GET_VM_FILES_IMAGE ?= daocloud.io/daocloud/powerclicore:no-cert-check
-GET_VM_FILES_SCRIPT ?= ./sh/get-vm-files_vmware.ps1
+# GET_VM_FILES_IMAGE ?= daocloud.io/daocloud/powerclicore:no-cert-check
+GET_VM_FILES_IMAGE ?= daocloud.io/daocloud/govc:latest
+# GET_VM_FILES_SCRIPT ?= ./sh/get-vm-files_vmware.ps1
+GET_VM_FILES_SCRIPT ?= ./sh/get-vm-files_vmware.sh
 
 LOAD_ROOT_VOLUME_SCRIPT ?= ./sh/load-root-volume.sh
 PREPARE_CONTAINER_SCRIPT ?= ./sh/prepare-container.sh
@@ -37,11 +42,11 @@ KUBELET_ROOT=/var/snap/microk8s/common/var/lib/kubelet
 
 # Make container images
 docker:
-	for i in binless binless:3 libguestfs-tools systemd; do \
+	for i in binless binless:3 libguestfs-tools systemd govc; do \
 		docker build . -f Dockerfile.$$i -t $$i; \
 	done
 push:
-	for i in binless binless:3 libguestfs-tools systemd; do \
+	for i in binless binless:3 libguestfs-tools systemd govc; do \
 		docker tag $$i daocloud.io/daocloud/$$i; \
 		docker push daocloud.io/daocloud/$$i || \
 		docker push daocloud.io/daocloud/$$i; \
@@ -119,6 +124,7 @@ log1:
 
 run2:
 	helm install 2-load-root-volume-$(VM) ./steps/load-root-volume/ \
+		--set extractMethod=$(EXTRACT_METHOD) \
 		--set libguestfs.kvm.enabled=$(USE_KVM) \
 		--set vm.name=$(VM) \
 		--set vm.disk=$(VM_DISK) \
@@ -174,7 +180,8 @@ curl:
 	node=$$(kubectl get po $(VM)-0 -o yaml | yq .spec.nodeName); \
 	ip=$$(kubectl get no $$node -o yaml | yq '.status.addresses[] | select (.type=="InternalIP") | .address'); \
 	port=$$(kubectl get svc $(VM) -o yaml | yq '.spec.ports[] | select(.name == "http") | .nodePort'); \
-	curl http://$$ip:$$port/info.php
+	curl http://$$ip:$$port/info.php; \
+	open http://$$ip:$$port/lamp
 
 stop:
 	kubectl scale sts/$(VM) --replicas=0

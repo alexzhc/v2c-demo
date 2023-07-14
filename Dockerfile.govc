@@ -1,0 +1,6 @@
+FROM docker.m.daocloud.io/vmware/govc AS builder
+FROM docker.m.daocloud.io/alpine
+COPY --from=builder /govc /usr/local/bin/
+# for analyzing files
+RUN apk add --no-cache -X https://dl-cdn.alpinelinux.org/alpine/edge/main bash jq 7zip xfsprogs e2fsprogs util-linux 
+RUN apk add --no-cache -X https://dl-cdn.alpinelinux.org/alpine/edge/main xfsprogs-extra

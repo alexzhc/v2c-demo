@@ -1,5 +1,7 @@
 #!/bin/pwsh
 
+# Use PowerCLI
+
 # Set-PowerCLIConfiguration -Scope AllUsers -ParticipateInCEIP $false -Confirm:$false
 Set-PowerCLIConfiguration -InvalidCertificateAction:Ignore -Confirm:$false
 

@@ -10,6 +10,9 @@ pvc:
   storageClass:
   accessMode: ReadWriteOnce
   volumeMode: Filesystem
+
+extractMethod: libguestfs # or 7zip
 libguestfs:
   kvm:
     enabled: false
+7zip:

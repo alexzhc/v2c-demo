@@ -10,6 +10,8 @@ spec:
       serviceAccount: prepare-container
       terminationGracePeriodSeconds: 0
       restartPolicy: Never
+      nodeSelector:
+        node-role.kubernetes.io/v2c: 'true'
       containers:
       - name: prepare
         image: {{ .Values.job.image }}

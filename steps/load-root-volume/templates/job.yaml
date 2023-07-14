@@ -9,6 +9,8 @@ spec:
     spec:
       terminationGracePeriodSeconds: 0
       restartPolicy: Never
+      nodeSelector:
+        node-role.kubernetes.io/v2c: 'true'
       containers:
       - name: load
         image: {{ .Values.job.image }}
@@ -18,6 +20,7 @@ spec:
           privileged: true
         command:
         - /tool/load-root-volume
+        - {{ .Values.extractMethod }}
         - {{ .Values.vm.disk }}
         - {{ .Values.vm.diskFormat }}
         volumeMounts:
@@ -27,10 +30,10 @@ spec:
         - name: lib-modules
           mountPath: /lib/modules
           readOnly: true
-        {{- if .Values.libguestfs.kvm.enabled }}
+        {{- if and (eq .Values.extractMethod "libguestfs") (eq .Values.libguestfs.kvm.enabled true) }}
         - name: kvm
           mountPath: /dev/kvm
-        {{ end }}
+        {{- end }}
         - name: tool
           mountPath: /tool
           readOnly: true
@@ -39,9 +42,11 @@ spec:
           readOnly: true
         - name: root-volume
           mountPath: /vol
+        {{- if eq .Values.extractMethod "7zip" }}
           readOnly: true
         - name: dev
           mountPath: /dev
+        {{- end }}
         # volumeDevices:
         # - name: root-volume
         #   devicePath: /dev/vol
@@ -49,19 +54,21 @@ spec:
       - name: boot
         hostPath:
           path: /boot
+      {{- if eq .Values.extractMethod "7zip" }}
       - name: dev
         hostPath:
           path: /dev
           type: Directory
+      {{- end }}
       - name: lib-modules
         hostPath:
           path: /lib/modules
-      {{- if .Values.libguestfs.kvm.enabled }}
+      {{- if and (eq .Values.extractMethod "libguestfs") (eq .Values.libguestfs.kvm.enabled true) }}
       - name: kvm
         hostPath:
           path: /dev/kvm
           type: CharDevice
-      {{ end }}
+      {{- end }}
       - name: tool
         configMap:
           name: v2c-{{ .Values.vm.name }}

@@ -5,11 +5,13 @@ RUN apt update && \
     apt clean -y
 RUN wget --no-check-certificate https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq && \
     chmod +x /usr/local/bin/yq
+RUN wget --no-check-certificate https://7-zip.org/a/7z2301-linux-x64.tar.xz -O 7z.tar.xz && \
+    tar -vxf 7z.tar.xz && \
+    install -v 7zz /usr/local/bin/ && \
+    install -v 7zzs /usr/local/bin/ && \
+    ln -vs /usr/local/bin/7zz /usr/local/bin/7z && \
+    rm -vfr 7z* 
 RUN apt update && \
     DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC \
-    apt install -y --no-install-recommends apt p7zip-full p7zip-rar && \
-    apt clean -y
-RUN apt update && \
-    DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC \
-    apt install -y --no-install-recommends xfsprogs e2fsprogs fdisk&& \
+    apt install -y --no-install-recommends xfsprogs e2fsprogs fdisk && \
     apt clean -y

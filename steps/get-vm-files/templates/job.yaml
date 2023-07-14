@@ -9,6 +9,8 @@ spec:
     spec:
       terminationGracePeriodSeconds: 0
       restartPolicy: Never
+      nodeSelector:
+        node-role.kubernetes.io/v2c: 'true'
       containers:
       - name: download
         image: {{ .Values.job.image }}
